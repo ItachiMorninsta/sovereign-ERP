@@ -63,23 +63,22 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   ResultCode: Integer;
 begin
-  if CurStep = ssInstall then
+  if CurStep = ssPostInstall then
   begin
     WizardForm.StatusLabel.Caption := 'Installing Tailscale...';
-    Exec(ExpandConstant('{tmp}\tailscale-setup.exe'), '/quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    if not Exec(ExpandConstant('{tmp}\tailscale-setup.exe'), '/quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      RaiseException('Could not launch the Tailscale installer (the bundled file is missing or was blocked).');
     if (ResultCode <> 0) and (ResultCode <> 3010) then
       RaiseException('Tailscale installation failed (code ' + IntToStr(ResultCode) + ').');
     if ResultCode = 3010 then GlobalRebootNeeded := True;
 
     WizardForm.StatusLabel.Caption := 'Installing Docker Desktop (enables WSL2, may take several minutes)...';
-    Exec(ExpandConstant('{tmp}\DockerDesktopInstaller.exe'), 'install --quiet --accept-license', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    if not Exec(ExpandConstant('{tmp}\DockerDesktopInstaller.exe'), 'install --quiet --accept-license', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      RaiseException('Could not launch the Docker Desktop installer (the bundled file is missing or was blocked).');
     if (ResultCode <> 0) and (ResultCode <> 3010) then
       RaiseException('Docker Desktop installation failed (code ' + IntToStr(ResultCode) + '). Common cause: virtualization disabled in BIOS/UEFI, or WSL2 could not be enabled. Enable virtualization (Intel VT-x / AMD-V) in BIOS and ensure Windows version is 10 2004+ or 11, then run setup again.');
     if ResultCode = 3010 then GlobalRebootNeeded := True;
-  end;
 
-  if CurStep = ssPostInstall then
-  begin
     WizardForm.StatusLabel.Caption := 'Generating ERP passwords...';
     Exec('powershell.exe', ExpandConstant('-ExecutionPolicy Bypass -Command ". ''{app}\lib\Stack.ps1''; New-SecretFiles -InstallDir ''{app}''"'), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     if ResultCode <> 0 then
