@@ -6,8 +6,11 @@ BeforeAll {
 Describe 'Tailscale steps' {
     BeforeEach { Mock Start-Sleep {} }
 
-    It 'Connect-TailscaleAccount polls until Running' {
-        Mock Invoke-TailscaleCli { 'login url printed' }
+    It 'Connect-TailscaleAccount polls until Running and surfaces the sign-in URL' {
+        Mock Start-TailscaleLogin { 'job-handle' }
+        Mock Read-TailscaleLoginOutput { 'To sign in, visit https://login.tailscale.com/a/abc123' }
+        Mock Stop-TailscaleLogin {}
+        Mock Start-Process {}
         $script:polls = 0
         Mock Get-TailscaleState {
             $script:polls++
@@ -15,12 +18,21 @@ Describe 'Tailscale steps' {
             else { [pscustomobject]@{ BackendState = 'Running' } }
         }
         { Connect-TailscaleAccount -TimeoutSeconds 60 } | Should -Not -Throw
-        Should -Invoke Invoke-TailscaleCli -Times 1 -ParameterFilter { ($Arguments -join ' ') -eq 'up' }
+        Should -Invoke Start-TailscaleLogin -Times 1
+        Should -Invoke Start-Process -Times 1 -ParameterFilter { $FilePath -eq 'https://login.tailscale.com/a/abc123' }
+        Should -Invoke Stop-TailscaleLogin -Times 1
     }
-    It 'Connect-TailscaleAccount throws on timeout' {
-        Mock Invoke-TailscaleCli { '' }
+    It 'Connect-TailscaleAccount throws on timeout and still cleans up the job' {
+        Mock Start-TailscaleLogin { 'job-handle' }
+        Mock Read-TailscaleLoginOutput { '' }
+        Mock Stop-TailscaleLogin {}
         Mock Get-TailscaleState { [pscustomobject]@{ BackendState = 'NeedsLogin' } }
         { Connect-TailscaleAccount -TimeoutSeconds 1 } | Should -Throw '*sign-in*'
+        Should -Invoke Stop-TailscaleLogin -Times 1
+    }
+    It 'Select-TailscaleLoginUrl extracts the auth URL and returns nothing when absent' {
+        Select-TailscaleLoginUrl -Text 'visit https://login.tailscale.com/a/xyz now' | Should -Be 'https://login.tailscale.com/a/xyz'
+        Select-TailscaleLoginUrl -Text 'no url here' | Should -BeNullOrEmpty
     }
     It 'Enable-TailscaleFunnel runs funnel --bg 8080' {
         Mock Invoke-TailscaleCli { 'funnel on' }
