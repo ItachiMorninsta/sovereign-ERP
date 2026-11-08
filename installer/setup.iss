@@ -42,7 +42,7 @@ Name: "{group}\Uninstall Sovereign ERP"; Filename: "{uninstallexe}"
 Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"; ValueName: "SovereignERPFirstRun"; ValueType: string; ValueData: "powershell.exe -ExecutionPolicy Bypass -File ""{app}\first-run.ps1"" -InstallDir ""{app}"""; Flags: uninsdeletevalue
 
 [UninstallRun]
-Filename: "docker"; Parameters: "compose down"; WorkingDir: "{app}"; Flags: runhidden skipifdoesNotExist; RunOnceId: "StopStack"
+Filename: "docker"; Parameters: "compose down"; WorkingDir: "{app}"; Flags: runhidden; RunOnceId: "StopStack"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
