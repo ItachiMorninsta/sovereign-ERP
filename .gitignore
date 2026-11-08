@@ -1,2 +1,10 @@
 odoo_pg_pass
 odoo_master_pass
+
+# Installer build artifacts
+installer/vendor/
+installer/stack/
+installer/output/
+# Machine-local secrets (never commit)
+odoo_pg_pass
+odoo_master_pass
