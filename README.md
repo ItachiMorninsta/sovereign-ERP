@@ -3,7 +3,8 @@
 Self-hosted Odoo 18 ERP for small businesses: one Windows Setup.exe installs
 everything (Docker Desktop, Tailscale, Odoo/PostgreSQL/Nginx stack) and gives
 the business a public https URL with no domain purchase. Data persists in
-Docker volumes; the system auto-starts on every boot.
+Docker volumes; the stack auto-starts after a user signs in to Windows
+(Docker Desktop's engine starts at login, not at power-on before login).
 
 ## Stack (source)
 `docker-compose.yml` + `config/` + `addons/` — Odoo 18.0, PostgreSQL 15,
@@ -40,5 +41,16 @@ subscription is required.
 
 ## Uninstall
 Settings > Apps > Sovereign ERP. You are asked whether to delete business
-data (default: keep). Tailscale itself can be removed separately via
-Settings > Apps.
+data (default: keep).
+
+- **Keep data (No):** the Docker volumes and the ERP passwords (stored in
+  `C:\ProgramData\SovereignERP`) are left in place. A later re-install reuses
+  them, so the same databases come back with the same master password.
+- **Delete data (Yes):** the stack is taken down, the `sovereign-ERP_*`
+  volumes are removed, and the `C:\ProgramData\SovereignERP` passwords are
+  wiped — a fully clean slate.
+
+Docker Desktop and Tailscale are **not** removed by the uninstaller; they are
+shared dependencies and removing them automatically is slow and can disrupt
+other software. Remove them yourself via Settings > Apps if the machine no
+longer needs them.
