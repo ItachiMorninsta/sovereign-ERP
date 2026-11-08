@@ -10,7 +10,7 @@ function Get-VendorInstallers {
     if (-not (Test-Path $VendorDir)) { New-Item $VendorDir -ItemType Directory -Force | Out-Null }
     $downloads = @(
         @{ Url = 'https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe'; File = 'DockerDesktopInstaller.exe' },
-        @{ Url = 'https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.exe'; File = 'tailscale-setup.exe' }
+        @{ Url = 'https://pkgs.tailscale.com/stable/tailscale-setup-full-latest.exe'; File = 'tailscale-setup.exe' }
     )
     foreach ($d in $downloads) {
         $dest = Join-Path $VendorDir $d.File
