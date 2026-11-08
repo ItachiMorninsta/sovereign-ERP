@@ -97,14 +97,16 @@ end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   ResultCode: Integer;
-  DockerUninstaller: String;
 begin
   if CurUninstallStep = usUninstall then
   begin
     if MsgBox('Delete the ERP database and ALL business data? Choose No to keep data for a future re-install.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+    begin
+      Exec('docker', 'compose down', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
       Exec('docker', 'volume rm sovereign-ERP_odoo-db-data sovereign-ERP_odoo-web-data', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    DockerUninstaller := ExpandConstant('{commonpf64}\Docker\Docker\Docker Desktop Installer.exe');
-    if FileExists(DockerUninstaller) then
-      Exec(DockerUninstaller, 'uninstall --quiet', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      DelTree(ExpandConstant('{commonappdata}\SovereignERP'), True, True, True);
+    end;
+    // Docker Desktop is left installed: it is a shared dependency and removing it
+    // is slow and can disrupt other software. See README for manual removal steps.
   end;
 end;
